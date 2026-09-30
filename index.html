@@ -933,6 +933,95 @@
             const db = firebase.firestore();
 
             console.log("Firebase conectado exitosamente en la app de la Universidad CESMAG.");
-          </script>
+                   <!-- Cargar SDK de Firebase (Módulos JS) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  
+  // 2. CÓDIGO PARA GUARDAR UN NUEVO REPORTE EN FIREBASE
+  if (networkForm) {
+    networkForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const inputs = networkForm.querySelectorAll('input');
+      const folVal = inputs[0] ? inputs[0].value : `TCK-${Date.now().toString().slice(-4)}`;
+      const tipoVal = inputs[1] ? inputs[1].value : "General";
+      const regVal = inputs[2] ? inputs[2].value : "Administrador";
+
+      try {
+        await addDoc(collection(db, "Reportes"), {
+          fol: folVal,
+          tipo: tipoVal,
+          registradoPor: regVal,
+          estado: "Pendiente",
+          fecha: new Date()
+        });
+
+        alert("¡Reporte guardado exitosamente en Firebase!");
+        networkForm.reset();
+        cargarReportesFirebase(); // Actualizar la tabla inmediatamente
+      } catch (error) {
+        console.error("Error al guardar en Firestore:", error);
+        alert("Ocurrió un error al guardar el reporte.");
+      }
+    });
+  }
+
+  // 3. CÓDIGO PARA CONSULTAR / CARGAR LOS REPORTES EN LA TABLA
+  async function cargarReportesFirebase() {
+    if (!networkTableBody) return;
+
+    try {
+      networkTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando reportes desde la nube...</td></tr>';
+      
+      const q = query(collection(db, "Reportes"));
+      const querySnapshot = await getDocs(q);
+
+      networkTableBody.innerHTML = ''; // Limpiar filas de carga
+
+      if (querySnapshot.empty) {
+        networkTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No hay reportes registrados.</td></tr>';
+        return;
+      }
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+        row.innerHTML = `
+          <td class="p-3 font-semibold">${data.fol || doc.id}</td>
+          <td class="p-3">${data.tipo || 'N/A'}</td>
+          <td class="p-3">${data.registradoPor || 'N/A'}</td>
+          <td class="p-3"><span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-bold">${data.estado || 'Pendiente'}</span></td>
+          <td class="p-3 text-center">
+            <button class="text-blue-600 hover:underline font-semibold text-xs">Editar</button>
+          </td>
+        `;
+        networkTableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error al consultar Firestore:", error);
+      networkTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar datos. Verificar credenciales.</td></tr>';
+    }
+  }
+
+  // 4. CÓDIGO PARA BUSCAR / FILTRAR REPORTES EN LA TABLA
+  if (searchInput) {
+    searchInput.addEventListener('keyup', function() {
+      const filter = searchInput.value.toLowerCase();
+      if (networkTableBody) {
+        const rows = networkTableBody.getElementsByTagName('tr');
+        Array.from(rows).forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(filter) ? '' : 'none';
+        });
+      }
+    });
+  }
+
+  // Cargar datos al iniciar la página
+  cargarReportesFirebase();
+      </script>
 </body>
 </html>
