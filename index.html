@@ -938,6 +938,24 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // 1. PEGA AQUÍ TUS LLAVES REALES
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "reportes-mantenimientos.firebaseapp.com",
+    projectId: "reportes-mantenimientos",
+    storageBucket: "reportes-mantenimientos.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+
+  // Inicializar Firebase y Firestore
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Referencias DOM
+  const networkForm = document.getElementById('networkForm') || document.querySelector('form:not(#loginForm)');
+  const networkTableBody = document.querySelector('tbody');
+  const searchInput = document.getElementById('searchInput');
   
   // 2. CÓDIGO PARA GUARDAR UN NUEVO REPORTE EN FIREBASE
   if (networkForm) {
